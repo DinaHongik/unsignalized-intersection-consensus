@@ -67,9 +67,9 @@ make run
 
 This code is an **experimental prototype** of the consensus algorithm described in the paper. It is intended for:
 
-<p align="center">
+<!-- <p align="center">
   <img src="https://github.com/user-attachments/assets/efb2ba7a-881f-4a9f-b9a5-c8a9f8f8f713" width="225" />
-</p>
+</p> -->
 
 - Illustrating how **Raft-style voting** can be adapted to CAV intersection management.
 - Providing a **reproducible simulation** for measuring:
