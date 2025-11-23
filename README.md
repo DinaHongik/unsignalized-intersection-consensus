@@ -22,6 +22,7 @@ The goal of this implementation is to:
 - **Fallback to a vision-based rule** (license plate lexicographical order) when consensus takes too long.
 
 ## 2. Algorithm Overview
+<img width="2211" height="3645" alt="consensus_flow" src="https://github.com/user-attachments/assets/4ceb27c1-4e7d-4e61-918d-35d55196d747" />
 
 The algorithm is inspired by the **Raft** consensus protocol but adapted for vehicular environments:
 
