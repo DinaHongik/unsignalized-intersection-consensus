@@ -12,6 +12,7 @@ import (
 	direction "main/config/directionBoolean"
 
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
 )
 
 var GO_SERVER_PORT = config.BasePort
@@ -76,19 +77,23 @@ func (s *server) ReceiveRequest(ctx context.Context, req *pb.Request) (*pb.Respo
 			directionStatus = "True"
 		}
 
+		vehicleCopy := proto.Clone(s.Vehicle).(*pb.Vehicle)
+
 		response := &pb.Response{
 			Message:           fmt.Sprintf("Vote registered from port %s to port %s", req.Port, s.Port),
 			Status:            "acknowledged",
 			DirectionStatus:   directionStatus,
 			ResponseDirection: s.Vehicle.Direction,
-			Vehicle:           s.Vehicle,
+			Vehicle:           vehicleCopy,
 		}
 		return response, nil
 	} else {
+		vehicleCopy := proto.Clone(s.Vehicle).(*pb.Vehicle)
+
 		response := &pb.Response{
 			Message: fmt.Sprintf("Vehicle %d has already voted", s.Vehicle.Number),
 			Status:  "ignored",
-			Vehicle: s.Vehicle,
+			Vehicle: vehicleCopy,
 		}
 		return response, nil
 	}
@@ -98,19 +103,24 @@ func (s *server) ReceiveRequest(ctx context.Context, req *pb.Request) (*pb.Respo
 // Handles leader election requests and updates vehicle roles based on vote counts and timestamps.
 func (s *server) LeaderElection(ctx context.Context, req *pb.Request) (*pb.Response, error) {
 	if req.Vehicle.ElectionStatus == "Follower" {
+		vehicleCopy := proto.Clone(s.Vehicle).(*pb.Vehicle)
+
 		response := &pb.Response{
 			Message: fmt.Sprintf("Vehicle %d is follower", s.Vehicle.Number),
 			Status:  "ignored",
-			Vehicle: s.Vehicle,
+			Vehicle: vehicleCopy,
 		}
 		return response, nil
 	}
 
 	if s.Vehicle.ReceiveVotes < req.Vehicle.ReceiveVotes {
+
+		vehicleCopy := proto.Clone(s.Vehicle).(*pb.Vehicle)
+
 		response := &pb.Response{
 			Message: fmt.Sprintf("Vehicle %d has already voted", s.Vehicle.Number),
 			Status:  "acknowledged",
-			Vehicle: s.Vehicle,
+			Vehicle: vehicleCopy,
 		}
 		// update this server as follower with newer vote info
 		s.Vehicle.ElectionStatus = "Follower"
@@ -123,10 +133,13 @@ func (s *server) LeaderElection(ctx context.Context, req *pb.Request) (*pb.Respo
 			serverTime := s.Vehicle.ElectionTime.AsTime().UnixNano()
 
 			if reqTime > serverTime {
+
+				vehicleCopy := proto.Clone(s.Vehicle).(*pb.Vehicle)
+
 				response := &pb.Response{
 					Message: fmt.Sprintf("Vehicle %d has already voted", s.Vehicle.Number),
 					Status:  "acknowledged",
-					Vehicle: s.Vehicle,
+					Vehicle: vehicleCopy,
 				}
 				// request has newer timestamp → this server becomes follower
 				s.Vehicle.ElectionStatus = "Follower"
@@ -134,10 +147,12 @@ func (s *server) LeaderElection(ctx context.Context, req *pb.Request) (*pb.Respo
 				s.Vehicle.ElectionTime = req.Vehicle.ElectionTime
 				return response, nil
 			} else {
+				vehicleCopy := proto.Clone(s.Vehicle).(*pb.Vehicle)
+
 				response := &pb.Response{
 					Message: fmt.Sprintf("Vehicle %d has already voted", s.Vehicle.Number),
 					Status:  "ignored",
-					Vehicle: s.Vehicle,
+					Vehicle: vehicleCopy,
 				}
 				// this server has newer timestamp → request vehicle becomes follower
 				req.Vehicle.ElectionStatus = "Follower"
@@ -147,10 +162,13 @@ func (s *server) LeaderElection(ctx context.Context, req *pb.Request) (*pb.Respo
 			}
 		}
 		// this server has more votes → request becomes follower
+
+		vehicleCopy := proto.Clone(s.Vehicle).(*pb.Vehicle)
+
 		response := &pb.Response{
 			Message: fmt.Sprintf("Vehicle %d has already voted", s.Vehicle.Number),
 			Status:  "ignored",
-			Vehicle: s.Vehicle,
+			Vehicle: vehicleCopy,
 		}
 		req.Vehicle.ElectionStatus = "Follower"
 		req.Vehicle.ReceiveVotes = s.Vehicle.ReceiveVotes
